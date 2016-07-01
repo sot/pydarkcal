@@ -1,3 +1,5 @@
+import numpy as np
+
 #get_lun,il
 #NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
 #get_lun,ol
@@ -13,7 +15,6 @@ DSNch = [65,147]
 
 #sfdurecl = 1134  ; Number of bytes in an SFDU
 sfdurecl = 1134
-
 #sfduhdrl = 104   ; Number of bytes in SFDU header
 sfduhdrl = 104
 
@@ -52,11 +53,10 @@ sl0 = {
 sl0n=0
 
 #r=assoc(il,bytarr(sfdurecl))
-#NOTE: NOT USED AT THIS TIME, ONCE CONFIRMED USELESS, DELETE
-
+#NOTE: NOT USED AT THIS TIME, ONCE CONFIRMED USELESS, delete
 
 #i=0L
-i=0
+indexo=0 # Named indexo so it is not confused with "i" or "index"
 #v=0L
 v=0
 #tdsn=0L
@@ -68,11 +68,11 @@ tother=0
 #nrecmax = 20000
 nrecmax=20000
 #idx=lonarr(nrecmax)
-#NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
+idx = []
 #count=lonarr(nrecmax)
-#NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
+count = np.zeros(nrecmax)
 #ert=dblarr(nrecmax)
-#NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
+ert = np.zeros(nrecmax)
 #timcount=0 ; a counter for composite total images written to FITS files
 timecount=0
 #rotally=intarr(1024,2)

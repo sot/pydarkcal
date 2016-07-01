@@ -54,6 +54,9 @@ try:
         print synctest1
         print synctest2
 
+
+        #Hello
+
         #if not (total(synctest1-SFDUsync)+total(synctest2-VCDUsync)) then begin
         #if not 0<false> then begin
         #if total+total != 0 then begin

@@ -3,7 +3,7 @@ from variables import *
 
 #TODO: Delete This when done
 #Checks the dec value of a hex.
-i = int('81F9', 16)
+i = int('3E1', 16)
 print 'Target for SFDUs: ' + `i`
 
 #pro prb, olun,a,b,c,...,z,format=fmt
@@ -43,28 +43,18 @@ for rr in r:
     for rrr in rr:
         ir.append(ord(rrr))
 
-    synctest1 = []
-    synctest2 = []
-    synctest1.append(ir[0])
-    synctest1.append(ir[1])
-    synctest1.append(ir[2])
-    synctest1.append(ir[3])
-    synctest2.append(ir[sfduhdrl+0])
-    synctest2.append(ir[sfduhdrl+1])
-    synctest2.append(ir[sfduhdrl+2])
-    synctest2.append(ir[sfduhdrl+3])
+    synctest1 = ir[0:4]
+    synctest2 = ir[sfduhdrl:sfduhdrl+4]
     notexplained=1
 
     if (synctest1 == SFDUsync and synctest2 == VCDUsync):
         notexplained=0
         v=v+1
-        ch=[]
-        ch.append(ir[sfduhdrl+4])
-        ch.append(ir[sfduhdrl+5])
+        ch=ir[sfduhdrl+4:sfduhdrl+6]
         if ch[1] == DSNch[1]:
 
             #testr = ir[sfduhdrl+10:sfduhdrl+1028] #Combined with statement bellow
-            testr = [i for i in ir[sfduhdrl+10:sfduhdrl+1028] if i != 170]
+            testr = [i for i in ir[sfduhdrl+10:sfduhdrl+1029] if i != 170]
             testn = len(testr)
 
             if testn > 3:
@@ -78,11 +68,11 @@ for rr in r:
 
         if ch!=DSNch:
             tother=tother+1
-            prb(ol,['record',`i+1`,' has unknown VCID: ',' '.join(str(x) for x in ir[sfduhdrl:sfduhdrl+5])])
+            prb(ol,['record',`i+1`,' has unknown VCID: ',' '.join(str(x) for x in ir[sfduhdrl:sfduhdrl+6])])
 
     indexo=indexo+1
     if notexplained==1:
-        prb(ol,[' *** record ',`i`, 'start is weird: ',' '.join(ir[0:sfduhdrl+11])])
+        prb(ol,[' *** record ',`i`, 'start is weird: ',' '.join(ir[0:sfduhdrl+12])])
 
 #End of Loop
 
@@ -98,9 +88,9 @@ prb(ol,'')
 if tdsn <= 0:
     prb(ol,['No DSN minor frames in the file, Bozo! I''m stopping!'])
 
-idx = idx[0:tdsn-1]
-count = count[0:tdsn-1]
-ert = ert[0:tdsn-1]
+idx = idx[0:tdsn]
+count = count[0:tdsn]
+ert = ert[0:tdsn]
 
 #disc=where((count-shift(count,1)) ne 1,ndisc)
 disc = [i for i in (count - np.roll(count,1)) if i != 1]

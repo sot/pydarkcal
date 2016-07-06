@@ -52,9 +52,6 @@ sl0 = {
 #sl0n=0
 sl0n=0
 
-#r=assoc(il,bytarr(sfdurecl))
-#NOTE: NOT USED AT THIS TIME, ONCE CONFIRMED USELESS, delete
-
 #i=0L
 indexo=0 # Named indexo so it is not confused with "i" or "index"
 #v=0L
@@ -70,9 +67,9 @@ nrecmax=20000
 #idx=lonarr(nrecmax)
 idx = []
 #count=lonarr(nrecmax)
-count = np.zeros(nrecmax)
+count = []
 #ert=dblarr(nrecmax)
-ert = np.zeros(nrecmax)
+ert = []
 #timcount=0 ; a counter for composite total images written to FITS files
 timecount=0
 #rotally=intarr(1024,2)

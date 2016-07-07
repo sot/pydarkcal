@@ -1,41 +1,42 @@
 import sys
 from variables import *
 
-#TODO: Delete This when done
-#Checks the dec value of a hex.
-i = int('3E1', 16)
-print 'Target for SFDUs: ' + `i`
+# TODO: Delete This when done
+# Checks the dec value of a hex.
+#i = int('48', 16)
+#print 'segments in the DSN minor frame counter, Target: ' + repr(i)
 
-#pro prb, olun,a,b,c,...,z,format=fmt
-def prb(olun,param_array):
+# pro prb, olun,a,b,c,...,z,format=fmt
+def prb(olun, param_array):
     str = ' '.join(param_array)
     print(str)
     olun.write(str + '\n')
 
-#caldatafile: data file to call
-#view number: 0 or 1
-#acalimg_sfdu(caldatafile,view)
-data_file = sys.argv[1] #caldatafile
+
+# caldatafile: data file to call
+# view number: 0 or 1
+# acalimg_sfdu(caldatafile,view)
+data_file = sys.argv[1]  # caldatafile
 if data_file == '':
     print('ERROR: -> data_file: ' + data_file)
 
 
-f = open(data_file,'r+b')
+f = open(data_file, 'r+b')
 il = f.read()
 f.close()
-ol = open('../data2/test_file_python.txt','w')
+ol = open('../data2/test_file_python.txt', 'w')
 
 
-prb(ol,['ACA cal data file:',data_file])
-prb(ol,'')
-prb(ol,['Valid SFDU sync is:',str(SFDUsync)])
-prb(ol,['Valid DSN record sync is:',str(VCDUsync),str(DSNch)])
-prb(ol,'')
+prb(ol, ['ACA cal data file:', data_file])
+prb(ol, '')
+prb(ol, ['Valid SFDU sync is:', str(SFDUsync)])
+prb(ol, ['Valid DSN record sync is:', str(VCDUsync), str(DSNch)])
+prb(ol, '')
 
 
 r = []
 for i in range(len(il)/sfdurecl):
-    r.append( il[i*sfdurecl:i*sfdurecl+sfdurecl] )
+    r.append(il[i*sfdurecl:i*sfdurecl+sfdurecl])
 
 
 for rr in r:
@@ -45,23 +46,22 @@ for rr in r:
 
     synctest1 = ir[0:4]
     synctest2 = ir[sfduhdrl:sfduhdrl+4]
-    notexplained=1
+    notexplained = 1
 
     if (synctest1 == SFDUsync and synctest2 == VCDUsync):
-        notexplained=0
-        v=v+1
-        ch=ir[sfduhdrl+4:sfduhdrl+6]
+        notexplained = 0
+        v = v+1
+        ch = ir[sfduhdrl+4:sfduhdrl+6]
         if ch[1] == DSNch[1]:
 
-            #testr = ir[sfduhdrl+10:sfduhdrl+1028] #Combined with statement bellow
             testr = [i for i in ir[sfduhdrl+10:sfduhdrl+1029] if i != 170]
             testn = len(testr)
 
             if testn > 3:
                 idx.append(indexo)
-                count.append(ir[sfduhdrl+6]*65536+ir[sfduhdrl+7]*256+ir[sfduhdrl+8])
-                ert.append((ir[42]*256 + ir[43] - 14610)* 84600e0+ (((ir[44]*256 + ir[45])*256 + ir[46])*256 + ir[47])/1e3 + (ir[48]*256 + ir[49])/1e6)
-                tdsn=tdsn+1
+                count.append(ir[sfduhdrl+6]*65536+ir[sfduhdrl+7]*256+ir[sfduhdrl + 8])
+                ert.append((ir[42]*256 + ir[43] - 14610) * 84600e0 + (((ir[44] * 256 + ir[45])*256 + ir[46])*256 + ir[47])/1e3 + (ir[48]*256 + ir[49])/1e6)
+                tdsn = tdsn+1
 
             else:
                 tfil=tfil+1
@@ -97,8 +97,6 @@ disc = [i for i in (count - np.roll(count,1)) if i != 1]
 ndisc = len(disc)
 disc = [disc,tdsn]
 
-#NOTE: ndisc target: 48
-#NOTE: ndisc curVal: 72
 prb(ol,[`ndisc`,'segments in the DSN minor frame counter'])
 
 

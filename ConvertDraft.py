@@ -15,17 +15,18 @@ def prb(olun, param_array):
 # and saves it to cal_data_file.
 cal_data_file = sys.argv[1]
 if cal_data_file == '':
-    print('ERROR: No Data File Given)
+    print('ERROR: No Data File Given')
 
 # TODO: Add implement code
 # data_file = sys.argv[2]  # View Number
 
 # Opens the Calibration Data File in binary mode.
 # ".read()" reads and saves the file's contents to the variable "il".
-il = open(data_file, 'r+b').read()
+il = open(cal_data_file, 'r+b').read()
 
 r = []
 for i in range(len(il)/sfdurecl):
+    # TODO: Bring for loop here
     r.append(il[i*sfdurecl:i*sfdurecl+sfdurecl])
 
 # Opens debug file to be written to
@@ -35,7 +36,7 @@ ol = open('../data2/test_file_python.txt', 'w')
 # start processing the cal data files
 #
 
-prb(ol, ['ACA cal data file:', data_file])
+prb(ol, ['ACA cal data file:', cal_data_file])
 prb(ol, '')
 prb(ol, ['Valid SFDU sync is:', str(SFDUsync)])
 prb(ol, ['Valid DSN record sync is:', str(VCDUsync), str(DSNch)])
@@ -69,13 +70,17 @@ for rr in r:
             if testn > 3:
                 idx.append(indexo)
                 # TODO: FIgure out how to wrap line - Christopher Thomas
-                count.append(ir[sfduhdrl + 6] * 65536 + ir[sfduhdrl + 7] * 256 + ir[sfduhdrl + 8])
+                count.append(ir[sfduhdrl + 6] * 65536 + ir[sfduhdrl + 7] *
+                             256 + ir[sfduhdrl + 8])
 
-                # I will carry time since the start of 1998 (the Chandra FITS file reference)
-                # which is 14610 days after the start of 1958 (the ERT reference), in seconds.
-                # NOTE: I ignore the 32.182 second + leap seconds offset between UTC (for ERT) and TT (for FITS)
-                # TODO: FIgure out how to wrap line - Christopher Thomas
-                ert.append((ir[42]*256 + ir[43] - 14610) * 84600e0 + (((ir[44] * 256 + ir[45])*256 + ir[46])*256 + ir[47])/1e3 + (ir[48]*256 + ir[49])/1e6)
+                # I will carry time since the start of 1998 (the Chandra FITS
+                # file reference) which is 14610 days after the start of 1958
+                # (the ERT reference), in seconds.
+                # NOTE: I ignore the 32.182 second + leap seconds offset...
+                # ...between UTC (for ERT) and TT (for FITS)
+                ert.append((ir[42]*256 + ir[43] - 14610) * 84600e0 +
+                           (((ir[44] * 256 + ir[45])*256 + ir[46]) * 256 +
+                           ir[47]) / 1e3 + (ir[48] * 256 + ir[49])/1e6)
                 tdsn = tdsn+1
 
             else:
@@ -104,6 +109,7 @@ prb(ol, '')
 prb(ol, [repr(indexo), ' SFDUs in the file'])
 prb(ol, '')
 
+
 if tdsn <= 0:
     prb(ol, ['No DSN minor frames in the file, Bozo! I''m stopping!'])
 
@@ -131,7 +137,7 @@ prb(ol, [repr(ndisc), 'segments in the DSN minor frame counter'])
 for f in range(ndisc):
     prb(ol, '')
     p drb(ol, ['>>>>>>>>>>>>>>> Processing DSN record segment ', repr(f),
-        ' <<<<<<<<<<<<<<<'])
+         ' <<<<<<<<<<<<<<<'])
     prb(ol, '')
 
     ndrec = disc[f+1]-disc(1)
@@ -146,10 +152,10 @@ for f in range(ndisc):
     scount = count[disc[f]:disc(f+1)]
     sert = ert[disc[f]:disc(f+1)]
     prb(ol, ['first, last, delta in DSN minor frame counter:  ',
-        repr(scount(0)), '  ', repr(scount(ndrec-1)), '  ',
-        repr(scount(ndrec-1)-scount(0)+1)])
+       repr(scount(0)), '  ', repr(scount(ndrec-1)), '  ',
+       repr(scount(ndrec-1)-scount(0)+1)])
     prb(ol, ['DSN secondary header range: ', min(maindat(0,*)),
-        max(maindat(0,*))]) # Have Fun!
+       max(maindat(0,*))]) # Have Fun!
     prb(ol, '')
 """
 ol.close()

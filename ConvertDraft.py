@@ -1,3 +1,23 @@
+# File: ConvertDraft.py
+# Original Code: Robert Cameron April 1999
+# Created By   : Christopher Thomas June 2016
+# Lasted Edited: Christopher Thomas Aug 1st 2016
+
+# CHANDRA
+#     v_1: Convert Code to Python [238/1970]
+#         * acalimg_sfdu.pro [227/621]
+#         * badpix_SAUS.pro [/94]
+#         * IO-median.pro [/5]
+#         * legend.pro [/473]
+#         * make_csv.pro [/46]
+#         * plot_dark.pro [/516]
+#         * plothist [/105]
+#         * prb.pro [11/11]
+#         * startup.pro [/102]
+#     v_2: Test Python Code [/]
+#     Known Bugs: (In Python Code)
+#       ...
+
 import sys
 import numpy as np
 
@@ -132,7 +152,7 @@ for indexo in range(len(il)/sfdurecl):
     # Setting current step of 1134 to "r"
     r = il[indexo*sfdurecl:indexo*sfdurecl+sfdurecl]
 
-    # Converting step "r" or decimals, saving to "ir"
+    # Converting step "r" to decimals, then saving to "ir"
     ir = []
     for rr in r:
         ir.append(ord(rr))
@@ -192,11 +212,11 @@ for indexo in range(len(il)/sfdurecl):
 # End of While Loop
 
 prb(ol, '')
-prb(ol, [repr(tdsn), ' DSN minor frames with pixel data in the file'])  # 4285
-prb(ol, [repr(tfil), ' FIL minor frames in the file'])  # 29015
-prb(ol, [repr(tother), ' TOTHER minor frames in the file'])  # 0
+prb(ol, [repr(tdsn), ' DSN minor frames with pixel data in the file'])
+prb(ol, [repr(tfil), ' FIL minor frames in the file'])
+prb(ol, [repr(tother), ' TOTHER minor frames in the file'])
 prb(ol, '')
-prb(ol, [repr(indexo), ' SFDUs in the file'])  # 33273
+prb(ol, [repr(indexo), ' SFDUs in the file'])
 prb(ol, '')
 
 
@@ -216,59 +236,21 @@ ert = ert[0:tdsn]
 # disc contains the first indices of new DSN segments
 #
 
-# ==========================================================================
-# ==========================================================================
-# ==========================================================================
-# ==============================JEAN LOOK HERE==============================
-# ==========================================================================
-# ==========================================================================
-# ==========================================================================
-# disc equals count - shifted_count at all elements not equals to 1
-disc = [i for i in (count - np.roll(count, 1)) if i != 1]
-# ndisc equals length of disc, NOTE: ndisc is corrent length.
+# returns the indexes where count - shifted_count does not equals 1
+disc = np.flatnonzero(count - np.roll(count, 1) != 1)
+
+# ndisc equals length of disc
 ndisc = len(disc)
-# disc equals disc appened tdsn (4258)
-disc = [disc, tdsn]
+# disc is an array, tdsn is an integer
+disc = np.append(disc, tdsn)
 
-# PROBLEM: disc in IDL vs Python are not equal.
-# IDL
-# 0          62         124         184         245         306
-# 367         429         490         532         593         653
-# 714         774         835         897         958        1020
-# 1063        1125        1185        1246        1308        1369
-# 1430        1493        1553        1596        1657        1719
-# 1781        1842        1905        1965        2025        2087
-# 2129        2191        2252        2312        2373        2435
-# 2497        2558        2620        2661        2722        2784
-# 2845        2908        2969        3029        3091        3151
-# 3193        3254        3314        3375        3437        3499
-# 3560        3623        3684        3726        3787        3849
-# 3910        3972        4033        4093        4155        4216
-
-# PYTHON
-# [-28586, 4, 4, 4, 5, 3, 4, 3, 4, 1559, 5, 5, 4, 4, 4, 3, 4, 3, 2262,
-# 4, 4, 4, 3, 4, 3, 4, 5, 2261, 4, 3, 3, 3, 4, 5, 4, 3, 2902, 5, 4, 4,
-# 4, 3, 3, 4, 3, 5080, 4, 3, 3, 4, 4, 4, 4, 4, 5080, 4, 4, 4, 3, 3, 3,
-# 3, 5, 5014, 4, 3, 3, 5, 4, 4, 4, 3]
-
-# Target is 72, current version hits target
-prb(ol, [repr(ndisc), 'segments in the DSN minor frame counter'])  # 72
-
-
-# =============
-# STOPPING HERE
-print "STOPPING\nsys.exit(0)"
-sys.exit(0)
-# STOPPING HERE
-# =============
-
-
-# TODO: Add more/personalized comments to code past this point.
-# Comment what I am doing and not just carry over comments from IDL
+prb(ol, [repr(ndisc), 'segments in the DSN minor frame counter'])
 
 #
 # process each segment (i.e. contiguous set) of DSN records - RC
 #
+
+# f in rnage of "length of disc"
 for f in range(ndisc):
     prb(ol, '')
     prb(ol, ['>>>>>>>>>>>>>>> Processing DSN record segment ', repr(f+1),
@@ -280,24 +262,24 @@ for f in range(ndisc):
     m = 0
     # for j=disc(f),disc(f+1)-1 do begin IDL
     # for j = disc(f) in range(disc(f+1)): PYTHON BROKEN
-    print disc
-    print "****"
-    print disc[f]
-    print "****"
-    print disc[f+1]
-    for j in range(disc[f], disc[f+1]-1):  # PYTHON FIXED?
+    for j in range(disc[f], disc[f+1]):  # PYTHON FIXED?
         k = idx[j]
         ir1 = r[k]
         # maindat(*,m)=ir1(sfduhdrl+9:sfduhdrl+1028) IDL CODE
-        mainddat.append(ir1[sfduhdrl+9: sfduhdrl+1029])
+        # maindat is set to ir1(sfduhdrl+9:sfduhdrl+1028) for all rows
+        maindat.append(ir1[sfduhdrl+9: sfduhdrl+1029])
         m = m + 1
+
     scount = count[disc[f]:disc[f+1]]
     sert = ert[disc[f]:disc[f+1]]
     prb(ol, ['first, last, delta in DSN minor frame counter:  ',
         repr(scount[0]), '  ', repr(scount[ndrec-1]), '  ',
         repr(scount[ndrec-1]-scount[0]+1)])
-    prb(ol, ['DSN secondary header range: ', np.min(np.array(maindat)[:, 0]),
-        np.max(np.array(maindat)[:, 0])])
+    # np.min... is finding the min values for 0-Col in maindat
+    # np.max... is finding the max values for 0-Col in maindat
+    prb(ol, ['DSN secondary header range: ',
+             np.min(np.array(maindat)[:, 0]),  # to many indices fro array
+             np.max(np.array(maindat)[:, 0])])
     prb(ol, '')
 
 #
@@ -310,7 +292,15 @@ for f in range(ndisc):
                  repr(idx(disc(f))+1)])
         prb(ol, "")
         prb(ol, ["Error: ndrec does not equals 1 -> ndrec = ", repr(ndrec)])
-        # TODO: goto nextdisc
+
+        # ======================================================================
+        # ======================================================================
+        # ======================================================================
+        # TODO: goto nextdisc  # IDL code
+        # ======================================================================
+        # ======================================================================
+        # ======================================================================
+
     ev = [i for i in scount if (scount/2)*2 == scount]
     nev = len(ev)
     od = [i for i in scount if (scount/2)*2 != scount]

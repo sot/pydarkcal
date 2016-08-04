@@ -1,11 +1,10 @@
 # File: ConvertDraft.py
 # Original Code: Robert Cameron April 1999
 # Created By   : Christopher Thomas June 2016
-# Lasted Edited: Christopher Thomas Aug 1st 2016
 
 # CHANDRA
 #     v_1: Convert Code to Python [238/1970]
-#         * acalimg_sfdu.pro [227/621]
+#         * acalimg_sfdu.pro [197/621]
 #         * badpix_SAUS.pro [/94]
 #         * IO-median.pro [/5]
 #         * legend.pro [/473]
@@ -130,6 +129,7 @@ il = open(cal_data_file, 'r+b').read()
 
 # Opens debug file to be written to
 ol = open('../data2/test_file_python.txt', 'w')
+christest = open('../data2/chris_file_python.txt', 'w')
 
 #
 # start processing the cal data files
@@ -146,16 +146,25 @@ prb(ol, '')
 # Inspect each SFDU in the file and check its contents
 #
 
-# Looping through cal_data_file in steps of sfdurecl (1134)
+# Set the 1134 steps of cal_data_file to r to be used throughout program
+r = []
 for indexo in range(len(il)/sfdurecl):
+    # Setting current step of 1134 to "r_step"
+    r_step = (il[indexo*sfdurecl:indexo*sfdurecl+sfdurecl])
 
-    # Setting current step of 1134 to "r"
-    r = il[indexo*sfdurecl:indexo*sfdurecl+sfdurecl]
+    # Converting "r_step" to decimals, then saving to "r_ord"
+    r_ord = []
+    for r_temp in r_step:
+        r_ord.append(ord(r_temp))
 
-    # Converting step "r" to decimals, then saving to "ir"
-    ir = []
-    for rr in r:
-        ir.append(ord(rr))
+    # appending array "r_ord" to array "r"
+    r.append(r_ord)
+
+# Looping through 1134 steps "r"
+# The loop number, indexo, is needed throughout the loop.
+# Reason for "indexo in range()" instead of "ir in r"
+for indexo in range(len(r)):
+    ir = r[indexo]
 
     # Testing synchronization
     synctest1 = ir[0:4]
@@ -238,7 +247,6 @@ ert = ert[0:tdsn]
 
 # returns the indexes where count - shifted_count does not equals 1
 disc = np.flatnonzero(count - np.roll(count, 1) != 1)
-
 # ndisc equals length of disc
 ndisc = len(disc)
 # disc is an array, tdsn is an integer
@@ -247,27 +255,39 @@ disc = np.append(disc, tdsn)
 prb(ol, [repr(ndisc), 'segments in the DSN minor frame counter'])
 
 #
+# ==========================
+# ==========================
+# Working Version Stops Here
+# ==========================
+# ==========================
+#
+
+#
 # process each segment (i.e. contiguous set) of DSN records - RC
 #
 
-# f in rnage of "length of disc"
+# f in range of "length of disc"
 for f in range(ndisc):
     prb(ol, '')
     prb(ol, ['>>>>>>>>>>>>>>> Processing DSN record segment ', repr(f+1),
         ' <<<<<<<<<<<<<<<'])
     prb(ol, '')
 
-    ndrec = disc[f+1]-disc[1]
-    maindat = [[], []]
+    ndrec = disc[f+1]-disc[f]
+    # Question Here
+    maindat = np.zeros(shape=(1020, ndrec))
     m = 0
     # for j=disc(f),disc(f+1)-1 do begin IDL
-    # for j = disc(f) in range(disc(f+1)): PYTHON BROKEN
-    for j in range(disc[f], disc[f+1]):  # PYTHON FIXED?
+    # for j = disc(f) in range(disc(f+1))
+    for j in range(disc[f], disc[f+1]):
+        # Getting integer in idx array at index j
         k = idx[j]
+        # get index k of array r, which is the 1134 byte steps.
         ir1 = r[k]
         # maindat(*,m)=ir1(sfduhdrl+9:sfduhdrl+1028) IDL CODE
         # maindat is set to ir1(sfduhdrl+9:sfduhdrl+1028) for all rows
-        maindat.append(ir1[sfduhdrl+9: sfduhdrl+1029])
+        # maindat[m,] is setting a list to fill row m.
+        maindat[m, ] = ir1[sfduhdrl+9: sfduhdrl+1029]
         m = m + 1
 
     scount = count[disc[f]:disc[f+1]]
@@ -278,65 +298,15 @@ for f in range(ndisc):
     # np.min... is finding the min values for 0-Col in maindat
     # np.max... is finding the max values for 0-Col in maindat
     prb(ol, ['DSN secondary header range: ',
-             np.min(np.array(maindat)[:, 0]),  # to many indices fro array
-             np.max(np.array(maindat)[:, 0])])
+             repr(np.min(np.array(maindat)[:, 0])),  # Target 80/Getting 128
+             repr(np.max(np.array(maindat)[:, 0]))])  # Target 80/Getting 128
     prb(ol, '')
 
-#
-# find the calibration data in the DSN records,
-# which is differently placed in alternating DSN records.
-# Test for both ways of packing.
-# TODO: Check array Index, Add 1 when needed
-    if ndrec == 1:
-        prb(ol, ['This is a single non-fill cal minor frame at record index ',
-                 repr(idx(disc(f))+1)])
-        prb(ol, "")
-        prb(ol, ["Error: ndrec does not equals 1 -> ndrec = ", repr(ndrec)])
+# acalimg_sfdu.pro line 196
 
-        # ======================================================================
-        # ======================================================================
-        # ======================================================================
-        # TODO: goto nextdisc  # IDL code
-        # ======================================================================
-        # ======================================================================
-        # ======================================================================
-
-    ev = [i for i in scount if (scount/2)*2 == scount]
-    nev = len(ev)
-    od = [i for i in scount if (scount/2)*2 != scount]
-    nod = len(od)
-    # Line 212 in acalimg.sfdu.pro
-    if not (maindat[1][ev] - 205 == 0 and maindat[1019][od] - 171 == 0):
-        calsync = 0
-    elif not (maindat[1][od] - 205 == 0 and maindat[1019][ev] - 171 == 0):
-        calsync = 1
-    else:
-        prb(ol, ["Cal data doesn't sync to DSN minor frame counter! Using",
-                 "previous sync..."])
-
-    if calsync == 0:
-        prb(ol, ['Cal records are synchronized to even DSN minor frame'
-                 'counter'])
-        for i in range(1017):
-            maindat[i][ev] = maindat[i+2][ev]
-        for i in range(1017):
-            maindat[i][od] = maindat[i+1][od]
-    elif calsync == 1:
-        prb(ol, ['Cal records are synchronized to odd DSN minor frame'
-                 'counter'])
-        for i in range(1017):
-            maindat[i][od] = maindat[i+2][od]
-        for i in range(1017):
-            maindat[i][ev] = maindat[i+1][ev]
-    # maindat = maindat[:1018][]
-    # maindat=reform(maindat,n_elements(maindat))
-    maindat.np.flatten()
-
-#
-# locate complete calibration records in the extracted cal data
-# and check constancy of cal record size
-#
-
-# acalimg_sfdu.pro LINE 227
+# more code has already been written, but not tested.
+# acalimg_sfdu.pro lines 197-227
+# kept in seperate "scraps.py" file. Kept in seperate
+# file so there is no confusion on current progress
 
 ol.close()

@@ -147,6 +147,8 @@ prb(ol, '')
 #
 
 # Set the 1134 steps of cal_data_file to r to be used throughout program
+# r is needed throughout the program, so you have to Initialize instead of...
+# ... just waiting for it to be used.
 r = []
 for indexo in range(len(il)/sfdurecl):
     # Setting current step of 1134 to "r_step"
@@ -232,12 +234,6 @@ prb(ol, '')
 if tdsn <= 0:
     prb(ol, ['No DSN minor frames in the file, Bozo! I''m stopping!'])
 
-# TBH I think this may be useless in python version, Needs to be tested to
-# see if idx,count, & ert change before and after these three lines
-idx = idx[0:tdsn]
-count = count[0:tdsn]
-ert = ert[0:tdsn]
-
 #
 # TERMINOLOGY: a "segment" is where the 24-bit DSN record counter is contiguous
 # (i.e. increments by 1 between DSN records)
@@ -273,12 +269,16 @@ for f in range(ndisc):
         ' <<<<<<<<<<<<<<<'])
     prb(ol, '')
 
+    # number of maindat cols?
     ndrec = disc[f+1]-disc[f]
-    # Question Here
-    maindat = np.zeros(shape=(1020, ndrec))
+
+    # Initializing maindat with 1020 cols and ndrec rows
+    maindat = np.zeros(shape=(ndrec, 1020))
+
+    # maindat indexing
     m = 0
-    # for j=disc(f),disc(f+1)-1 do begin IDL
-    # for j = disc(f) in range(disc(f+1))
+
+    # loop from int at disc[f] to int at disc[f+1]
     for j in range(disc[f], disc[f+1]):
         # Getting integer in idx array at index j
         k = idx[j]
@@ -287,6 +287,7 @@ for f in range(ndisc):
         # maindat(*,m)=ir1(sfduhdrl+9:sfduhdrl+1028) IDL CODE
         # maindat is set to ir1(sfduhdrl+9:sfduhdrl+1028) for all rows
         # maindat[m,] is setting a list to fill row m.
+        # maindat[:, m] = ir1[sfduhdrl+9: sfduhdrl+1029]
         maindat[m, ] = ir1[sfduhdrl+9: sfduhdrl+1029]
         m = m + 1
 
@@ -298,15 +299,18 @@ for f in range(ndisc):
     # np.min... is finding the min values for 0-Col in maindat
     # np.max... is finding the max values for 0-Col in maindat
     prb(ol, ['DSN secondary header range: ',
-             repr(np.min(np.array(maindat)[:, 0])),  # Target 80/Getting 128
-             repr(np.max(np.array(maindat)[:, 0]))])  # Target 80/Getting 128
+             repr(np.min(np.array(maindat)[:, 0])),  # Printing Correct Value
+             repr(np.max(np.array(maindat)[:, 0]))])  # Printing Correct Value
     prb(ol, '')
 
-# acalimg_sfdu.pro line 196
+    # acalimg_sfdu.pro line 196
+    print maindat
+    sys.exit(0)
 
 # more code has already been written, but not tested.
 # acalimg_sfdu.pro lines 197-227
 # kept in seperate "scraps.py" file. Kept in seperate
 # file so there is no confusion on current progress
 
+christest.close()
 ol.close()

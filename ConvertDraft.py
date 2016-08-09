@@ -3,8 +3,8 @@
 # Created By   : Christopher Thomas June 2016
 
 # CHANDRA
-#     v_1: Convert Code to Python [238/1970]
-#         * acalimg_sfdu.pro [197/621]
+#     v_1: Convert Code to Python [240/1970]
+#         * acalimg_sfdu.pro [219/621]
 #         * badpix_SAUS.pro [/94]
 #         * IO-median.pro [/5]
 #         * legend.pro [/473]
@@ -82,13 +82,15 @@ tfil = 0
 tother = 0
 nrecmax = 20000
 # idx=lonarr(nrecmax)
+# holds a list of index
 idx = []
 # count=lonarr(nrecmax)
 count = []
 # ert=dblarr(nrecmax)
 ert = []
 #  a counter for composite total images written to FITS files
-timecount = 0
+# timecount = 0
+# NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
 # rotally=intarr(1024,2)
 # NOTE: DOES NOT NEED TO BE INITIALIZED AT THIS TIME
 # rofill=intarr(1024,2)
@@ -129,7 +131,6 @@ il = open(cal_data_file, 'r+b').read()
 
 # Opens debug file to be written to
 ol = open('../data2/test_file_python.txt', 'w')
-christest = open('../data2/chris_file_python.txt', 'w')
 
 #
 # start processing the cal data files
@@ -251,14 +252,6 @@ disc = np.append(disc, tdsn)
 prb(ol, [repr(ndisc), 'segments in the DSN minor frame counter'])
 
 #
-# ==========================
-# ==========================
-# Working Version Stops Here
-# ==========================
-# ==========================
-#
-
-#
 # process each segment (i.e. contiguous set) of DSN records - RC
 #
 
@@ -272,7 +265,7 @@ for f in range(ndisc):
     # number of maindat cols?
     ndrec = disc[f+1]-disc[f]
 
-    # Initializing maindat with 1020 cols and ndrec rows
+    # Initializing maindat with ndrec rows and 1020 cols
     maindat = np.zeros(shape=(ndrec, 1020))
 
     # maindat indexing
@@ -304,13 +297,93 @@ for f in range(ndisc):
     prb(ol, '')
 
     # acalimg_sfdu.pro line 196
-    print maindat
-    sys.exit(0)
 
 # more code has already been written, but not tested.
 # acalimg_sfdu.pro lines 197-227
 # kept in seperate "scraps.py" file. Kept in seperate
 # file so there is no confusion on current progress
+
+#
+# find the calibration data in the DSN records,
+# which is differently placed in alternating DSN records.
+# Test for both ways of packing.
+# TODO: Check array Index, Add 1 when needed
+    if ndrec == 1:
+        prb(ol, ['This is a single non-fill cal minor frame at record index ',
+                 repr(idx(disc(f))+1)])
+        prb(ol, "")
+        prb(ol, ["Error: ndrec does not equals 1 -> ndrec = ", repr(ndrec)])
+
+        # ======================================================================
+        # ======================================================================
+        # ======================================================================
+        # TODO: goto nextdisc  # IDL code line 212
+        # ======================================================================
+        # ======================================================================
+        # ======================================================================
+
+    # TODO: Change varialbe names "ev" and "od" once both variables are...
+    # ...done being converted
+    # I do not know why he name odd number scount "ev"...
+    # ...and named even number scount "od". But that is what he did.
+
+    # ev equals scount where scount is odd
+    ev = [x for x in scount if x % 2 != 0]
+    nev = len(ev)
+
+    # od equals scount where scount is even
+    od = [x for x in scount if x % 2 == 0]
+    nod = len(od)
+
+    #
+    # ==========================
+    # ==========================
+    # Working Version Stops Here
+    # ==========================
+    # ==========================
+    #
+
+    # Line 219 in acalimg.sfdu.pro
+    # if not (total(maindat(1,ev)-'cd'xb)+total(maindat(1019,od)-'ab'xb))...
+    # ... then calsync=0 $
+    # IndexError: index 34757 is out of bounds for axis 1 with size 1020
+    if not (maindat[1][ev] - 205 == 0 and maindat[1019][od] - 171 == 0):
+        calsync = 0
+
+    # else if not (total(maindat(1,od)-'cd'xb)+total(maindat(1019,ev)...
+    # ... -'ab'xb)) then calsync=1 $
+    elif not (maindat[1][od] - 205 == 0 and maindat[1019][ev] - 171 == 0):
+        calsync = 1
+    else:
+        prb(ol, ["Cal data doesn't sync to DSN minor frame counter! Using",
+                 "previous sync..."])
+
+    # Have not begun testing the following yet
+
+    if calsync == 0:
+        prb(ol, ['Cal records are synchronized to even DSN minor frame'
+                 'counter'])
+        for i in range(1017):
+            maindat[i][ev] = maindat[i+2][ev]
+        for i in range(1017):
+            maindat[i][od] = maindat[i+1][od]
+    elif calsync == 1:
+        prb(ol, ['Cal records are synchronized to odd DSN minor frame'
+                 'counter'])
+        for i in range(1017):
+            maindat[i][od] = maindat[i+2][od]
+        for i in range(1017):
+            maindat[i][ev] = maindat[i+1][ev]
+    # maindat = maindat[:1018][]
+    # maindat=reform(maindat,n_elements(maindat))
+    maindat.np.flatten()
+
+#
+# locate complete calibration records in the extracted cal data
+# and check constancy of cal record size
+#
+
+# acalimg_sfdu.pro LINE 227
 
 christest.close()
 ol.close()
